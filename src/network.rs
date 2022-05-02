@@ -28,6 +28,8 @@ use std::{
   sync::Arc,
   time::{Duration, Instant, SystemTime},
 };
+use std::borrow::{Borrow, BorrowMut};
+use std::ops::Deref;
 use tokio::sync::Mutex;
 use tokio::try_join;
 
@@ -41,6 +43,12 @@ pub enum IoEvent {
   SetTracksToTable(Vec<FullTrack>),
   GetMadeForYouPlaylistTracks(String, u32),
   GetPlaylistTracks(String, u32),
+  CreateNewPlaylist(
+    String,
+    String,
+    bool,
+    String
+  ),
   GetCurrentSavedTracks(Option<u32>),
   StartPlayback(Option<String>, Option<Vec<String>>, Option<usize>),
   UpdateSearchLimits(u32, u32),
@@ -168,6 +176,12 @@ impl<'a> Network<'a> {
         self
           .get_made_for_you_playlist_tracks(playlist_id, made_for_you_offset)
           .await;
+      }
+      IoEvent::CreateNewPlaylist(user_id,
+                                 playlistName,
+                                 public,
+                                 description) => {
+        self.create_playlist(user_id, playlistName, public, description).await;
       }
       IoEvent::GetPlaylistTracks(playlist_id, playlist_offset) => {
         self.get_playlist_tracks(playlist_id, playlist_offset).await;
@@ -419,6 +433,15 @@ impl<'a> Network<'a> {
       app.playlist_tracks = Some(playlist_tracks);
       app.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
     };
+  }
+
+  async fn create_playlist(&mut self, user_id: String, playlist_name: String,
+                           public: bool,
+                           description: String) {
+    // new playlist is created, now here are the next steps
+    // 1. go to view, handle 400 error since there's nothing in it
+    // 2. have the naming happen in the main view
+    self.spotify.user_playlist_create(&user_id, &playlist_name, public, description).await;
   }
 
   async fn set_playlist_tracks_to_table(&mut self, playlist_track_page: &Page<PlaylistTrack>) {

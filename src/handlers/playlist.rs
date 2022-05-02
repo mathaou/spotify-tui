@@ -84,6 +84,9 @@ pub fn handler(key: Key, app: &mut App) {
         );
       }
     }
+    Key::Char('N') => {
+      app.create_new_playlist();
+    }
     _ => {}
   }
 }

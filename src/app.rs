@@ -1192,4 +1192,13 @@ impl App {
       self.help_menu_page -= 1;
     }
   }
+
+  pub fn create_new_playlist(&mut self) {
+    let id = self.user.clone().unwrap().id;
+    self.dispatch(IoEvent::CreateNewPlaylist(
+      String::from(id),
+      String::from("New Playlist"),
+      false,
+      String::from("Test")))
+  }
 }
